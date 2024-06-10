@@ -59,8 +59,8 @@ export default class Mysql extends Handler {
         conn.release();
     }
     async run(query, dataArgs, connection) {
-        let conn = connection ?? this.connectionPool;
-        let data = await new Promise((resolve, reject) => {
+        const conn = connection ?? this.connectionPool;
+        const data = await new Promise((resolve, reject) => {
             conn.query(query, dataArgs, function (err, r) {
                 if (err) {
                     reject(err);
@@ -70,29 +70,31 @@ export default class Mysql extends Handler {
                 }
             });
         });
-        let result = new model.ResultSet();
-        if (data.insertId)
-            result.id = data.insertId;
-        if (data.changedRows) {
-            result.rowCount = data.changedRows;
-        }
-        else if (Array.isArray(data)) {
+        const result = new model.ResultSet();
+        if (Array.isArray(data)) {
             result.rows = data;
             result.rowCount = data.length;
+        }
+        else {
+            if (data.insertId)
+                result.id = data.insertId;
+            if (data.changedRows) {
+                result.rowCount = data.changedRows;
+            }
         }
         return result;
     }
     runStatement(queryStmt, connection) {
-        let { query, dataArgs } = this.prepareQuery(queryStmt);
+        const { query, dataArgs } = this.prepareQuery(queryStmt);
         return this.run(query, dataArgs, connection);
     }
     async stream(query, dataArgs, connection) {
-        let conn = connection ?? this.connectionPool;
-        let stream = conn.query(query, dataArgs).stream();
+        const conn = connection ?? this.connectionPool;
+        const stream = conn.query(query, dataArgs).stream();
         return stream;
     }
     streamStatement(queryStmt, connection) {
-        let { query, dataArgs } = this.prepareQuery(queryStmt);
+        const { query, dataArgs } = this.prepareQuery(queryStmt);
         return this.stream(query, dataArgs, connection);
     }
 }

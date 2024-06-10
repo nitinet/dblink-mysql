@@ -142,11 +142,11 @@ export default class Mysql extends Handler {
    * @param {?mysql.Connection} [connection]
    * @returns {Promise<model.ResultSet>}
    */
-  async run(query: string, dataArgs?: any[], connection?: mysql.Connection): Promise<model.ResultSet> {
-    let conn = connection ?? this.connectionPool;
+  async run(query: string, dataArgs?: unknown[], connection?: mysql.Connection): Promise<model.ResultSet> {
+    const conn = connection ?? this.connectionPool;
 
-    let data = await new Promise<any>((resolve, reject) => {
-      conn.query(query, dataArgs, function (err: Error | null, r: any) {
+    const data: { insertId: number; changedRows: number } | Record<string, unknown>[] = await new Promise((resolve, reject) => {
+      conn.query(query, dataArgs, function (err: Error | null, r: { insertId: number; changedRows: number } | Record<string, unknown>[]) {
         if (err) {
           reject(err);
         } else {
@@ -155,13 +155,15 @@ export default class Mysql extends Handler {
       });
     });
 
-    let result = new model.ResultSet();
-    if (data.insertId) result.id = data.insertId;
-    if (data.changedRows) {
-      result.rowCount = data.changedRows;
-    } else if (Array.isArray(data)) {
+    const result = new model.ResultSet();
+    if (Array.isArray(data)) {
       result.rows = data;
       result.rowCount = data.length;
+    } else {
+      if (data.insertId) result.id = data.insertId;
+      if (data.changedRows) {
+        result.rowCount = data.changedRows;
+      }
     }
     return result;
   }
@@ -174,7 +176,7 @@ export default class Mysql extends Handler {
    * @returns {Promise<model.ResultSet>}
    */
   runStatement(queryStmt: sql.Statement | sql.Statement[], connection?: mysql.Connection): Promise<model.ResultSet> {
-    let { query, dataArgs } = this.prepareQuery(queryStmt);
+    const { query, dataArgs } = this.prepareQuery(queryStmt);
     return this.run(query, dataArgs, connection);
   }
 
@@ -187,10 +189,10 @@ export default class Mysql extends Handler {
    * @param {?mysql.Connection} [connection]
    * @returns {Promise<Readable>}
    */
-  async stream(query: string, dataArgs?: any[], connection?: mysql.Connection): Promise<Readable> {
-    let conn = connection ?? this.connectionPool;
+  async stream(query: string, dataArgs?: unknown[], connection?: mysql.Connection): Promise<Readable> {
+    const conn = connection ?? this.connectionPool;
 
-    let stream = conn.query(query, dataArgs).stream();
+    const stream = conn.query(query, dataArgs).stream();
     return stream;
   }
 
@@ -202,7 +204,7 @@ export default class Mysql extends Handler {
    * @returns {Promise<Readable>}
    */
   streamStatement(queryStmt: sql.Statement | sql.Statement[], connection?: mysql.Connection): Promise<Readable> {
-    let { query, dataArgs } = this.prepareQuery(queryStmt);
+    const { query, dataArgs } = this.prepareQuery(queryStmt);
     return this.stream(query, dataArgs, connection);
   }
 }
