@@ -1,4 +1,5 @@
 import { Handler, model, sql } from 'dblink-core';
+import { DataType, IEntityType } from 'dblink-core/src/types';
 import mysql from 'mysql';
 import { Readable } from 'stream';
 
@@ -158,12 +159,8 @@ export default class Mysql extends Handler {
     const result = new model.ResultSet();
     if (Array.isArray(data)) {
       result.rows = data;
-      result.rowCount = data.length;
-    } else {
-      if (data.insertId) result.id = data.insertId;
-      if (data.changedRows) {
-        result.rowCount = data.changedRows;
-      }
+    } else if (data.insertId) {
+      result.rows.push({ id: data.insertId });
     }
     return result;
   }
@@ -206,5 +203,28 @@ export default class Mysql extends Handler {
   streamStatement(queryStmt: sql.Statement | sql.Statement[], connection?: mysql.Connection): Promise<Readable> {
     const { query, dataArgs } = this.prepareQuery(queryStmt);
     return this.stream(query, dataArgs, connection);
+  }
+
+  /**
+   * creates a returing columns expression for the insert statement
+   *
+   * @abstract
+   * @param {sql.INode[]} returnColumns
+   * @returns {string}
+   */
+  getReturnColumnsStr(): string {
+    return '';
+  }
+
+  serializeValue(val: unknown, dataType: IEntityType<DataType>): unknown {
+    if (dataType == Array) {
+      return JSON.stringify(val);
+    } else return val;
+  }
+
+  deSerializeValue(val: unknown, dataType: IEntityType<DataType>): unknown {
+    if (dataType == Array) {
+      return JSON.parse(val as string) as Array<unknown>;
+    } else return val;
   }
 }
