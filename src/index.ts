@@ -39,29 +39,12 @@ export default class Mysql extends Handler {
    * Creates an instance of Mysql.
    *
    * @constructor
-   * @param {model.IConnectionConfig} config
+   * @param {mysql.PoolConfig} config
    */
-  constructor(config: model.IConnectionConfig) {
+  constructor(config: mysql.PoolConfig) {
     super(config);
 
-    this.connectionPool = mysql.createPool({
-      connectionLimit: this.config.connectionLimit,
-      host: this.config.host,
-      port: this.config.port,
-      user: this.config.username,
-      password: this.config.password,
-      database: this.config.database
-    });
-  }
-
-  /**
-   * Handler initialisation
-   *
-   * @async
-   * @returns {Promise<void>}
-   */
-  async init(): Promise<void> {
-    // document why this async method 'init' is empty
+    this.connectionPool = mysql.createPool(config);
   }
 
   /**
@@ -203,17 +186,6 @@ export default class Mysql extends Handler {
   streamStatement(queryStmt: sql.Statement | sql.Statement[], connection?: mysql.Connection): Promise<Readable> {
     const { query, dataArgs } = this.prepareQuery(queryStmt);
     return this.stream(query, dataArgs, connection);
-  }
-
-  /**
-   * creates a returing columns expression for the insert statement
-   *
-   * @abstract
-   * @param {sql.INode[]} returnColumns
-   * @returns {string}
-   */
-  getReturnColumnsStr(): string {
-    return '';
   }
 
   serializeValue(val: unknown, dataType: IEntityType<DataType>): unknown {

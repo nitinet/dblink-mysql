@@ -4,16 +4,8 @@ export default class Mysql extends Handler {
   connectionPool;
   constructor(config) {
     super(config);
-    this.connectionPool = mysql.createPool({
-      connectionLimit: this.config.connectionLimit,
-      host: this.config.host,
-      port: this.config.port,
-      user: this.config.username,
-      password: this.config.password,
-      database: this.config.database
-    });
+    this.connectionPool = mysql.createPool(config);
   }
-  async init() {}
   getConnection() {
     return new Promise((res, rej) => {
       this.connectionPool.getConnection((err, c) => {
@@ -80,9 +72,6 @@ export default class Mysql extends Handler {
   streamStatement(queryStmt, connection) {
     const { query, dataArgs } = this.prepareQuery(queryStmt);
     return this.stream(query, dataArgs, connection);
-  }
-  getReturnColumnsStr() {
-    return '';
   }
   serializeValue(val, dataType) {
     if (dataType == Array) {
