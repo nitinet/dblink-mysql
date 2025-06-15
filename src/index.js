@@ -1,87 +1,101 @@
 import { Handler, model } from 'dblink-core';
 import mysql from 'mysql';
 export default class Mysql extends Handler {
-  connectionPool;
-  constructor(config) {
-    super(config);
-    this.connectionPool = mysql.createPool(config);
-  }
-  getConnection() {
-    return new Promise((res, rej) => {
-      this.connectionPool.getConnection((err, c) => {
-        if (err) rej(err);
-        else res(c);
-      });
-    });
-  }
-  initTransaction(conn) {
-    return new Promise((resolve, reject) => {
-      conn.beginTransaction(err => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-  }
-  commit(conn) {
-    return new Promise((resolve, reject) => {
-      conn.commit(err => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-  }
-  rollback(conn) {
-    return new Promise((resolve, reject) => {
-      conn.rollback(err => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-  }
-  async close(conn) {
-    conn.release();
-  }
-  async run(query, dataArgs, connection) {
-    const conn = connection ?? this.connectionPool;
-    const data = await new Promise((resolve, reject) => {
-      conn.query(query, dataArgs, function (err, r) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(r);
-        }
-      });
-    });
-    const result = new model.ResultSet();
-    if (Array.isArray(data)) {
-      result.rows = data;
-    } else if (data.insertId) {
-      result.rows.push({ id: data.insertId });
+    connectionPool;
+    constructor(config) {
+        super(config);
+        this.connectionPool = mysql.createPool(config);
     }
-    return result;
-  }
-  runStatement(queryStmt, connection) {
-    const { query, dataArgs } = this.prepareQuery(queryStmt);
-    return this.run(query, dataArgs, connection);
-  }
-  async stream(query, dataArgs, connection) {
-    const conn = connection ?? this.connectionPool;
-    const stream = conn.query(query, dataArgs).stream();
-    return stream;
-  }
-  streamStatement(queryStmt, connection) {
-    const { query, dataArgs } = this.prepareQuery(queryStmt);
-    return this.stream(query, dataArgs, connection);
-  }
-  serializeValue(val, dataType) {
-    if (dataType == Array) {
-      return JSON.stringify(val);
-    } else return val;
-  }
-  deSerializeValue(val, dataType) {
-    if (dataType == Array) {
-      return JSON.parse(val);
-    } else return val;
-  }
+    getConnection() {
+        return new Promise((res, rej) => {
+            this.connectionPool.getConnection((err, c) => {
+                if (err)
+                    rej(err);
+                else
+                    res(c);
+            });
+        });
+    }
+    initTransaction(conn) {
+        return new Promise((resolve, reject) => {
+            conn.beginTransaction((err) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve();
+            });
+        });
+    }
+    commit(conn) {
+        return new Promise((resolve, reject) => {
+            conn.commit((err) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve();
+            });
+        });
+    }
+    rollback(conn) {
+        return new Promise((resolve, reject) => {
+            conn.rollback((err) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve();
+            });
+        });
+    }
+    async close(conn) {
+        conn.release();
+    }
+    async run(query, dataArgs, connection) {
+        const conn = connection ?? this.connectionPool;
+        const data = await new Promise((resolve, reject) => {
+            conn.query(query, dataArgs, function (err, r) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(r);
+                }
+            });
+        });
+        const result = new model.ResultSet();
+        if (Array.isArray(data)) {
+            result.rows = data;
+        }
+        else if (data.insertId) {
+            result.rows.push({ id: data.insertId });
+        }
+        return result;
+    }
+    runStatement(queryStmt, connection) {
+        const { query, dataArgs } = this.prepareQuery(queryStmt);
+        return this.run(query, dataArgs, connection);
+    }
+    async stream(query, dataArgs, connection) {
+        const conn = connection ?? this.connectionPool;
+        const stream = conn.query(query, dataArgs).stream();
+        return stream;
+    }
+    streamStatement(queryStmt, connection) {
+        const { query, dataArgs } = this.prepareQuery(queryStmt);
+        return this.stream(query, dataArgs, connection);
+    }
+    serializeValue(val, dataType) {
+        if (dataType == Array) {
+            return JSON.stringify(val);
+        }
+        else
+            return val;
+    }
+    deSerializeValue(val, dataType) {
+        if (dataType == Array) {
+            return JSON.parse(val);
+        }
+        else
+            return val;
+    }
 }
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJpbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxPQUFPLEVBQUUsT0FBTyxFQUFFLEtBQUssRUFBTyxNQUFNLGFBQWEsQ0FBQztBQUVsRCxPQUFPLEtBQUssTUFBTSxPQUFPLENBQUM7QUEyQjFCLE1BQU0sQ0FBQyxPQUFPLE9BQU8sS0FBTSxTQUFRLE9BQU87SUFNeEMsY0FBYyxDQUFhO0lBUTNCLFlBQVksTUFBd0I7UUFDbEMsS0FBSyxDQUFDLE1BQU0sQ0FBQyxDQUFDO1FBRWQsSUFBSSxDQUFDLGNBQWMsR0FBRyxLQUFLLENBQUMsVUFBVSxDQUFDLE1BQU0sQ0FBQyxDQUFDO0lBQ2pELENBQUM7SUFPRCxhQUFhO1FBQ1gsT0FBTyxJQUFJLE9BQU8sQ0FBdUIsQ0FBQyxHQUFHLEVBQUUsR0FBRyxFQUFFLEVBQUU7WUFDcEQsSUFBSSxDQUFDLGNBQWMsQ0FBQyxhQUFhLENBQUMsQ0FBQyxHQUFxQixFQUFFLENBQXVCLEVBQUUsRUFBRTtnQkFDbkYsSUFBSSxHQUFHO29CQUFFLEdBQUcsQ0FBQyxHQUFHLENBQUMsQ0FBQzs7b0JBQ2IsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO1lBQ2QsQ0FBQyxDQUFDLENBQUM7UUFDTCxDQUFDLENBQUMsQ0FBQztJQUNMLENBQUM7SUFRRCxlQUFlLENBQUMsSUFBMEI7UUFDeEMsT0FBTyxJQUFJLE9BQU8sQ0FBTyxDQUFDLE9BQU8sRUFBRSxNQUFNLEVBQUUsRUFBRTtZQUMzQyxJQUFJLENBQUMsZ0JBQWdCLENBQUMsQ0FBQyxHQUFxQixFQUFFLEVBQUU7Z0JBQzlDLElBQUksR0FBRztvQkFBRSxNQUFNLENBQUMsR0FBRyxDQUFDLENBQUM7O29CQUNoQixPQUFPLEVBQUUsQ0FBQztZQUNqQixDQUFDLENBQUMsQ0FBQztRQUNMLENBQUMsQ0FBQyxDQUFDO0lBQ0wsQ0FBQztJQVFELE1BQU0sQ0FBQyxJQUEwQjtRQUMvQixPQUFPLElBQUks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
